@@ -74,8 +74,8 @@ func (cs *CatStore) Delete(ctx context.Context, id int64) error {
 func (cs *CatStore) Update(ctx context.Context, cat *Cat) error {
 	query := `
 	UPDATE cats
-	SET name = $1, years_of_experience = $2, breed = $3, salary = $4
-	WHERE id = $5;
+	SET salary = $1
+	WHERE id = $2;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -84,15 +84,12 @@ func (cs *CatStore) Update(ctx context.Context, cat *Cat) error {
 	res, err := cs.db.ExecContext(
 		ctx,
 		query,
-		cat.Name,
-		cat.YearsOfExperience,
-		cat.Breed,
 		cat.Salary,
 		cat.ID,
 	)
 
 	if err != nil {
-		return fmt.Errorf("store: failed to update cat: %w", err)
+		return fmt.Errorf("store: failed to update cat salary: %w", err)
 	}
 
 	affected, err := res.RowsAffected()
