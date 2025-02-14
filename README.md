@@ -39,3 +39,6 @@ To stop running services just use:
 
 ### Postman Collection
 A Postman collection is available in the `postman/` folder, ready to be used for testing the API. Simply import it into Postman and start testing the endpoints.
+
+### Rough DB diagram
+![Database Diagram](img/db.png)
