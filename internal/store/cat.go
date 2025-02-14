@@ -10,7 +10,7 @@ import (
 type Cat struct {
 	ID                int64   `json:"id"`
 	Name              string  `json:"name"`
-	YearsOfExperience uint    `json:"years_of_experience"`
+	YearsOfExperience int     `json:"years_of_experience"`
 	Breed             string  `json:"breed"`
 	Salary            float64 `json:"salary"`
 }

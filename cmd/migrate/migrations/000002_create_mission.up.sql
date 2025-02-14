@@ -1,0 +1,5 @@
+CREATE TABLE missions (
+    id SERIAL PRIMARY KEY,
+    cat_id BIGINT REFERENCES cats(id) ON DELETE SET NULL,
+    is_complete BOOLEAN NOT NULL DEFAULT FALSE
+);

@@ -54,17 +54,20 @@ func (ms *MissionStore) Create(ctx context.Context, mission *Mission) error {
 		RETURNING id;
 	`
 	for idx, t := range mission.Targets {
+		var id int64
 		err = tx.QueryRowContext(
 			ctx,
 			queryCreateTargets,
 			mission.ID,
 			t.Name,
 			t.Country,
-		).Scan(&mission.Targets[idx].ID)
-
+		).Scan(&id)
 		if err != nil {
 			return fmt.Errorf("store: failed to create target: %w", err)
 		}
+
+		mission.Targets[idx].ID = id
+		mission.Targets[idx].MissionID = mission.ID
 	}
 
 	if err = tx.Commit(); err != nil {

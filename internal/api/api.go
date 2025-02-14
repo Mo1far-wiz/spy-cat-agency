@@ -2,21 +2,9 @@ package api
 
 import (
 	"spy-cat-agency/internal/api/handlers"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
-
-type Application struct {
-	Config Config
-}
-
-type Config struct {
-	Addr         string
-	WriteTimeout time.Duration
-	ReadTimeout  time.Duration
-	IdleTimeout  time.Duration
-}
 
 func Mount(server *gin.Engine) {
 	apiV1 := server.Group("/v1")

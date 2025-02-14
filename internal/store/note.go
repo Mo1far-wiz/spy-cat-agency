@@ -18,8 +18,8 @@ type Note struct {
 
 func (ms *MissionStore) AddNote(ctx context.Context, note *Note) error {
 	query := `
-		INSERT INTO notes (mission_id, target_id, note, created_at)
-		VALUES ($1, $2, $3, NOW())
+		INSERT INTO notes (mission_id, target_id, note)
+		VALUES ($1, $2, $3)
 		RETURNING id;
 	`
 
