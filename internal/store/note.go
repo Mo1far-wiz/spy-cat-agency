@@ -11,7 +11,7 @@ type Note struct {
 	// a little denormalization
 	MissionID int64  `json:"mission_id"`
 	TargetID  int64  `json:"target_id"`
-	Note      string `json:"note"`
+	Note      string `json:"note" validation:"required"`
 	// i know that it wasn't in task, but it's just makes sense
 	CreatedAt time.Time `json:"created_at"`
 }

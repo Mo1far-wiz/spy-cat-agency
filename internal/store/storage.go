@@ -22,14 +22,21 @@ type CRUD[T any] interface {
 type Storage struct {
 	Cat interface {
 		CRUD[Cat]
+		HasIncompleteMission(context.Context, int64) (bool, error)
 	}
 	Mission interface {
 		CRUD[Mission]
 		AssignCat(context.Context, int64, int64) error
-		RemoveCat(context.Context, int64, int64) error
 		AddTarget(context.Context, int64, *Target) error
 		RemoveTarget(context.Context, int64) error
 		AddNote(context.Context, *Note) error
+		GetAllWithTargets(context.Context) ([]Mission, error)
+		GetByIDWithTargets(context.Context, int64) (*Mission, error)
+		GetAllMissionTargets(context.Context, int64) ([]Target, error)
+		HasAssignedSpy(context.Context, int64) (bool, error)
+		GetTargetsQuantity(context.Context, int64) (int, error)
+		GetTargetByID(context.Context, int64) (*Target, error)
+		UpdateTarget(context.Context, *Target) error
 	}
 }
 

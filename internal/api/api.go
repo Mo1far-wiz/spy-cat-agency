@@ -23,19 +23,21 @@ func Mount(router *gin.Engine) {
 	cats.DELETE("/:catID", handlers.DeleteCat) // delete
 
 	missions := apiV1.Group("/missions")
-	cats.Use(middleware.ExtractID("missionID"))
+	missions.Use(middleware.ExtractID("missionID"))
 	missions.GET("/", handlers.GetAllMissions)             // get all
 	missions.POST("/", handlers.CreateMission)             // create
 	missions.GET("/:missionID", handlers.GetMissionByID)   // get by id
 	missions.PUT("/:missionID", handlers.UpdateMission)    // update
 	missions.DELETE("/:missionID", handlers.DeleteMission) // delete
 
-	missions.PUT("/:missionID/assign", handlers.AssignCatForMission)    // assign	cat for mission
-	missions.DELETE("/:missionID/remove", handlers.RemoveCatForMission) // remove	cat from mission
+	catMission := missions.Group("/:missionID")
+	catMission.Use(middleware.ExtractID("catID"))
+	catMission.PUT("/:catID/assign", handlers.AssignCatForMission) // assign cat for mission
 
-	targets := missions.Group("/:missionID/targets")
-	cats.Use(middleware.ExtractID("targetID"))
-	targets.POST("/", handlers.AddMissionTarget)               // add mission target
-	targets.PUT("/:targetID/note", handlers.AddNoteOnTarget)   // update note on target
+	targets := missions.Group("/targets")
+	targets.Use(middleware.ExtractID("targetID"))
+	targets.POST("/:missionID", handlers.AddMissionTarget)     // add mission target
+	targets.POST("note/:targetID", handlers.AddNoteOnTarget)   // update note on target
+	targets.PUT("/:targetID", handlers.UpdateMissionTarget)    // update target
 	targets.DELETE("/:targetID", handlers.DeleteMissionTarget) // delete mission target
 }

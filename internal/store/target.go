@@ -10,8 +10,8 @@ import (
 type Target struct {
 	ID         int64  `json:"id"`
 	MissionID  int64  `json:"mission_id"`
-	Name       string `json:"name"`
-	Country    string `json:"country"`
+	Name       string `json:"name" validation:"required"`
+	Country    string `json:"country" validation:"required"`
 	IsComplete bool   `json:"is_complete"`
 }
 
@@ -56,7 +56,7 @@ func (ms *MissionStore) GetAllMissionTargets(ctx context.Context, missionID int6
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := ms.db.QueryContext(ctx, query)
+	rows, err := ms.db.QueryContext(ctx, query, missionID)
 	if err != nil {
 		return nil, fmt.Errorf("store: failed to execute query: %w", err)
 	}

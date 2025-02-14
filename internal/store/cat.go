@@ -163,3 +163,25 @@ func (cs *CatStore) GetAll(ctx context.Context) ([]Cat, error) {
 	}
 	return cats, nil
 }
+
+func (cs *CatStore) HasIncompleteMission(ctx context.Context, catID int64) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM missions
+			WHERE cat_id = $1 AND is_complete = FALSE
+			LIMIT 1
+		);
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	var exists bool
+	err := cs.db.QueryRowContext(ctx, query, catID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("store: failed to check incomplete missions: %w", err)
+	}
+
+	return exists, nil
+}

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type request struct {
+type requestChangeSalary struct {
 	Salary float64 `json:"salary" validate:"required"`
 }
 
@@ -63,7 +63,7 @@ func CreateCat(context *gin.Context) {
 func UpdateCat(context *gin.Context) {
 	ctx := context.Request.Context()
 
-	var request request
+	var request requestChangeSalary
 	err := context.ShouldBindBodyWithJSON(&request)
 	if err != nil {
 		context.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Could not parse request data."})

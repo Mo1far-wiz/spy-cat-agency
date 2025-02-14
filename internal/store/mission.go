@@ -11,7 +11,7 @@ type Mission struct {
 	ID         int64    `json:"id"`
 	CatID      *int64   `json:"cat_id"`
 	IsComplete bool     `json:"is_complete"`
-	Targets    []Target `json:"targets"`
+	Targets    []Target `json:"targets" validation:"required"`
 }
 
 type MissionStore struct {
@@ -141,7 +141,7 @@ func (ms *MissionStore) Delete(ctx context.Context, id int64) error {
 
 func (ms *MissionStore) GetByID(ctx context.Context, id int64) (*Mission, error) {
 	query := `
-	SELECT id, cat_id, targets, is_complete
+	SELECT id, cat_id, is_complete
 	FROM missions
 	WHERE id = $1;
 	`
@@ -168,9 +168,25 @@ func (ms *MissionStore) GetByID(ctx context.Context, id int64) (*Mission, error)
 	return &mission, nil
 }
 
+func (ms *MissionStore) GetByIDWithTargets(ctx context.Context, id int64) (*Mission, error) {
+	mission, err := ms.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("store: failed to get mission by ID: %w", err)
+	}
+
+	targets, err := ms.GetAllMissionTargets(ctx, mission.ID)
+	if err != nil {
+		return nil, fmt.Errorf("store: failed to get targets for mission %d: %w", mission.ID, err)
+	}
+
+	mission.Targets = targets
+
+	return mission, nil
+}
+
 func (ms *MissionStore) GetAll(ctx context.Context) ([]Mission, error) {
 	query := `
-		SELECT id, cat_id, targets, is_complete
+		SELECT id, cat_id, is_complete
 		FROM missions;
 	`
 
@@ -193,6 +209,23 @@ func (ms *MissionStore) GetAll(ctx context.Context) ([]Mission, error) {
 
 		missions = append(missions, m)
 	}
+	return missions, nil
+}
+
+func (ms *MissionStore) GetAllWithTargets(ctx context.Context) ([]Mission, error) {
+	missions, err := ms.GetAll(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("store: failed to get missions: %w", err)
+	}
+
+	for i, mission := range missions {
+		targets, err := ms.GetAllMissionTargets(ctx, mission.ID)
+		if err != nil {
+			return nil, fmt.Errorf("store: failed to get targets for mission %d: %w", mission.ID, err)
+		}
+		missions[i].Targets = targets
+	}
+
 	return missions, nil
 }
 
@@ -229,36 +262,28 @@ func (ms *MissionStore) AssignCat(ctx context.Context, catID int64, missionID in
 	return nil
 }
 
-func (ms *MissionStore) RemoveCat(ctx context.Context, catID int64, missionID int64) error {
+func (ms *MissionStore) HasAssignedSpy(ctx context.Context, missionID int64) (bool, error) {
 	query := `
-	UPDATE missions
-	SET cat_id = NULL
-	WHERE id = $1;
-`
+		SELECT cat_id
+		FROM missions
+		WHERE id = $1;
+	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	res, err := ms.db.ExecContext(
-		ctx,
-		query,
-		missionID,
-	)
-
+	var catID *int64
+	err := ms.db.QueryRowContext(ctx, query, missionID).Scan(&catID)
 	if err != nil {
-		return fmt.Errorf("store: failed to remove cat: %w", err)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return false, ErrorNotFound
+		default:
+			return false, fmt.Errorf("store: failed to check if mission has assigned spy: %w", err)
+		}
 	}
 
-	affected, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("store: failed to retrieve affected rows: %w", err)
-	}
-
-	if affected == 0 {
-		return ErrorNotFound
-	}
-
-	return nil
+	return catID != nil, nil
 }
 
 func (ms *MissionStore) AddTarget(ctx context.Context, id int64, target *Target) error {
@@ -310,6 +335,39 @@ func (ms *MissionStore) RemoveTarget(ctx context.Context, targetId int64) error 
 	}
 
 	// on delete cascade will do the thing with notes
+
+	return nil
+}
+
+func (ms *MissionStore) UpdateTarget(ctx context.Context, target *Target) error {
+	query := `
+	UPDATE targets
+	SET is_complete = $1
+	WHERE id = $2;
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	res, err := ms.db.ExecContext(
+		ctx,
+		query,
+		target.IsComplete,
+		target.ID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("store: failed to update target: %w", err)
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("store: failed to retrieve affected rows: %w", err)
+	}
+
+	if affected == 0 {
+		return ErrorNotFound
+	}
 
 	return nil
 }
