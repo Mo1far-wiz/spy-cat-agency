@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"spy-cat-agency/internal/api"
 	"spy-cat-agency/internal/db"
+	"spy-cat-agency/internal/env"
 	"spy-cat-agency/internal/store"
 	"time"
 
@@ -39,10 +40,10 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  30 * time.Second,
 		DB: DBConfig{
-			Addr:         "postgres://admin:adminpassword@localhost/agency?sslmode=disable",
-			MaxOpenConns: 30,
-			MaxIdleConns: 30,
-			MaxIdleTime:  "15m",
+			Addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/agency?sslmode=disable"),
+			MaxOpenConns: env.GetInt("MAX_OPEN_CONNS", 30),
+			MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
+			MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 	}
 

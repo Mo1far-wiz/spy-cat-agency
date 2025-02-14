@@ -8,7 +8,7 @@ import (
 	"spy-cat-agency/internal/store"
 )
 
-// go shows me store.Target is not a type compiler NotAType so i did this
+// go shows me store.Target is not a type (compiler NotAType) so i did this
 type storeTarget = store.Target
 
 func Seed(store store.Storage) {
