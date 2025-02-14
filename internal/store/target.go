@@ -10,8 +10,8 @@ import (
 type Target struct {
 	ID         int64  `json:"id"`
 	MissionID  int64  `json:"mission_id"`
-	Name       string `json:"name" validation:"required"`
-	Country    string `json:"country" validation:"required"`
+	Name       string `json:"name"`
+	Country    string `json:"country"`
 	IsComplete bool   `json:"is_complete"`
 }
 

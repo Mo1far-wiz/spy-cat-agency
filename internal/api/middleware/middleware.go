@@ -4,14 +4,21 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Printf("Incoming request: %s %s FROM %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+		start := time.Now()
+
+		log.Printf("Incoming request: %s %s", c.Request.Method, c.Request.URL.Path)
+
 		c.Next()
+
+		duration := time.Since(start)
+		log.Printf("Response status: %d, Duration: %v", c.Writer.Status(), duration)
 	}
 }
 

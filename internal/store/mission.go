@@ -11,7 +11,7 @@ type Mission struct {
 	ID         int64    `json:"id"`
 	CatID      *int64   `json:"cat_id"`
 	IsComplete bool     `json:"is_complete"`
-	Targets    []Target `json:"targets" validation:"required"`
+	Targets    []Target `json:"targets"`
 }
 
 type MissionStore struct {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"spy-cat-agency/internal/application"
+	"spy-cat-agency/internal/breed"
 	"spy-cat-agency/internal/store"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +50,17 @@ func CreateCat(context *gin.Context) {
 	err := context.ShouldBindBodyWithJSON(&cat)
 	if err != nil {
 		context.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Could not parse request data."})
+		return
+	}
+
+	exists, err := breed.ValidateCatBreed(cat.Breed)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not validate breed."})
+		return
+	}
+
+	if !exists {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Breed does not exists."})
 		return
 	}
 
