@@ -14,109 +14,104 @@ type requestChangeSalary struct {
 	Salary float64 `json:"salary" validate:"required"`
 }
 
-func GetAllCats(context *gin.Context) {
-	ctx := context.Request.Context()
-
-	cats, err := application.App.Store.Cat.GetAll(ctx)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not get all cats."})
-		return
-	}
-
-	context.JSON(http.StatusOK, cats)
+type errorResponse struct {
+	Message string `json:"message"`
 }
 
-func GetCatByID(context *gin.Context) {
-	ctx := context.Request.Context()
+func newErrorResponse(message string) errorResponse {
+	return errorResponse{Message: message}
+}
 
-	id := context.GetInt64("catID")
-	cat, err := application.App.Store.Cat.GetByID(ctx, id)
+func GetAllCats(c *gin.Context) {
+	cats, err := application.App.Store.Cat.GetAll(c.Request.Context())
 	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrorNotFound):
-			context.JSON(http.StatusNotFound, gin.H{"message": "Cat not found."})
-		default:
-			context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not get cat."})
+		c.JSON(http.StatusInternalServerError, newErrorResponse("Could not get all cats"))
+		return
+	}
+	c.JSON(http.StatusOK, cats)
+}
+
+func GetCatByID(c *gin.Context) {
+	cat, err := application.App.Store.Cat.GetByID(c.Request.Context(), c.GetInt64("catID"))
+	if err != nil {
+		status := http.StatusInternalServerError
+		message := "Could not get cat"
+
+		if errors.Is(err, store.ErrorNotFound) {
+			status = http.StatusNotFound
+			message = "Cat not found"
 		}
+
+		c.JSON(status, newErrorResponse(message))
 		return
 	}
-
-	context.JSON(http.StatusOK, cat)
+	c.JSON(http.StatusOK, cat)
 }
 
-func CreateCat(context *gin.Context) {
-	ctx := context.Request.Context()
+func CreateCat(c *gin.Context) {
 	var cat store.Cat
-	err := context.ShouldBindBodyWithJSON(&cat)
-	if err != nil {
-		context.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Could not parse request data."})
+	if err := c.ShouldBindJSON(&cat); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, newErrorResponse("Could not parse request data"))
 		return
 	}
 
 	exists, err := breed.ValidateCatBreed(cat.Breed)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not validate breed."})
+		c.JSON(http.StatusInternalServerError, newErrorResponse("Could not validate breed"))
 		return
 	}
 
 	if !exists {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Breed does not exists."})
+		c.JSON(http.StatusBadRequest, newErrorResponse("Invalid breed"))
 		return
 	}
 
-	err = application.App.Store.Cat.Create(ctx, &cat)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create cat."})
+	if err := application.App.Store.Cat.Create(c.Request.Context(), &cat); err != nil {
+		c.JSON(http.StatusInternalServerError, newErrorResponse("Could not create cat"))
+		return
 	}
-
-	context.JSON(http.StatusCreated, cat)
+	c.JSON(http.StatusCreated, cat)
 }
 
-func UpdateCat(context *gin.Context) {
-	ctx := context.Request.Context()
-
+func UpdateCat(c *gin.Context) {
 	var request requestChangeSalary
-	err := context.ShouldBindBodyWithJSON(&request)
-	if err != nil {
-		context.JSON(http.StatusUnprocessableEntity, gin.H{"message": "Could not parse request data."})
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, newErrorResponse("Could not parse request data"))
 		return
 	}
 
-	id := context.GetInt64("catID")
-
 	cat := store.Cat{
-		ID:     id,
+		ID:     c.GetInt64("catID"),
 		Salary: request.Salary,
 	}
 
-	err = application.App.Store.Cat.Update(ctx, &cat)
-	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrorNotFound):
-			context.JSON(http.StatusNotFound, gin.H{"message": "Cat not found."})
-		default:
-			context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not update cat."})
+	if err := application.App.Store.Cat.Update(c.Request.Context(), &cat); err != nil {
+		status := http.StatusInternalServerError
+		message := "Could not update cat"
+
+		if errors.Is(err, store.ErrorNotFound) {
+			status = http.StatusNotFound
+			message = "Cat not found"
 		}
+
+		c.JSON(status, newErrorResponse(message))
 		return
 	}
-
-	context.JSON(http.StatusOK, gin.H{"message": "updated"})
+	c.JSON(http.StatusOK, gin.H{"message": "updated"})
 }
 
-func DeleteCat(context *gin.Context) {
-	ctx := context.Request.Context()
-	id := context.GetInt64("catID")
+func DeleteCat(c *gin.Context) {
+	if err := application.App.Store.Cat.Delete(c.Request.Context(), c.GetInt64("catID")); err != nil {
+		status := http.StatusInternalServerError
+		message := "Could not delete cat"
 
-	err := application.App.Store.Cat.Delete(ctx, id)
-	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrorNotFound):
-			context.JSON(http.StatusNotFound, gin.H{"message": "Cat not found."})
-		default:
-			context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not delete cat."})
+		if errors.Is(err, store.ErrorNotFound) {
+			status = http.StatusNotFound
+			message = "Cat not found"
 		}
+
+		c.JSON(status, newErrorResponse(message))
 		return
 	}
-
-	context.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }

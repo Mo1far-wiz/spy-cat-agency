@@ -115,9 +115,8 @@ func generateNotes(num int, targets []store.Target) []store.Note {
 		target := targets[rand.IntN(targetsLen)]
 		note := peopleNotes[idx%peopleNotesLen]
 		notes[idx] = store.Note{
-			TargetID:  target.ID,
-			MissionID: target.MissionID,
-			Note:      note,
+			TargetID: target.ID,
+			Note:     note,
 		}
 	}
 
