@@ -8,8 +8,6 @@ import (
 )
 
 func Mount(router *gin.Engine) {
-	router.Use(gin.Recovery())
-
 	apiV1 := router.Group("/v1")
 
 	apiV1.Use(middleware.Logger())
