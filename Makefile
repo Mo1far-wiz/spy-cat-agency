@@ -1,4 +1,4 @@
-include .env
+include .example.env
 
 MIGRATION_PATH = ./cmd/migrate/migrations
 
@@ -42,7 +42,11 @@ run: build
 	ADDR=${ADDR} DB_ADDR=${DB_ADDR} MAX_OPEN_CONNS=${MAX_OPEN_CONNS} DB_MAX_IDLE_CONNS=${DB_MAX_IDLE_CONNS} MAX_OPEN_CONNS=${MAX_OPEN_CONNS} ./bin/api-server
 	@echo "Server is running!"
 
-.PHONY: setup
-setup: up migrate-up seed
+.PHONY: setup-project
+setup-project:
 	@cp .example.env .env
+	@go mod tidy
+
+.PHONY: setup
+setup: setup-project up migrate-up seed
 	@echo "Database migrations applied, seed data inserted, and Docker containers started!"
