@@ -15,6 +15,10 @@ Clone this repository and navigate to the project directory.
 
 Open docker Desctop.
 
+## I have used golang-migrate
+
+Guide to [install](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md) 
+
 ### Start the Database & Apply Migrations
 
 Run the following command to **start the database, apply migrations, and seed data**:
